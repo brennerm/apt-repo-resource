@@ -6,9 +6,7 @@ import os
 import sys
 import urllib.request
 
-import apt
-
-from common import make_single_repo_apt_cache
+import apt_repo
 
 stdout_fd = sys.stdout.fileno()
 
@@ -17,7 +15,7 @@ with contextlib.redirect_stdout(sys.stderr):
     config = json.loads(sys.stdin.read())
 
     try:
-        repo = config['source']['repository']
+        repos = config['source']['repositories']
         package = config['source']['package']
     except KeyError as e:
         print('required parameter "' + e.args[0] + '" missing')
@@ -32,8 +30,10 @@ with contextlib.redirect_stdout(sys.stderr):
         f.write(version)
 
     if config['params']['download_deb']:
-        cache = apt.Cache()
-        url = cache[package].versions[version].uri
+        sources = apt_repo.APTSources(
+            [apt_repo.APTRepository.from_sources_list_entry(repo) for repo in repos]
+        )
+        url = sources.get_package_url(package, version)
         filename = url.split('/')[-1]
 
         urllib.request.urlretrieve(

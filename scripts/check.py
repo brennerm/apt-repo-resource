@@ -5,9 +5,8 @@ import json
 import os
 import sys
 
-import apt
-
-from common import make_single_repo_apt_cache
+import apt_repo
+import packaging.version
 
 stdout_fd = sys.stdout.fileno()
 
@@ -15,7 +14,7 @@ with contextlib.redirect_stdout(sys.stderr):
     config = json.loads(sys.stdin.read())
 
     try:
-        repo = config['source']['repository']
+        repos = config['source']['repositories']
         package_name = config['source']['package']
     except KeyError as e:
         print('required parameter "' + e.args[0] + '" missing')
@@ -23,10 +22,12 @@ with contextlib.redirect_stdout(sys.stderr):
 
     version = config['version']['id'] if config['version'] is not None else None
 
-    cache = make_single_repo_apt_cache(repo)
-
-    pkg = cache[package_name]
-    pkg_versions = [version.version for version in pkg.versions][::-1]
+    sources = apt_repo.APTSources(
+        [apt_repo.APTRepository.from_sources_list_entry(repo) for repo in repos]
+    )
+    pkgs = sources[package_name]
+    pkg_versions = [pkg.version for pkg in pkgs]
+    pkg_versions.sort(key=lambda el: packaging.version.parse(el))
 
     if not version or len(pkg_versions) == 0:
         new_versions = pkg_versions
