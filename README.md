@@ -2,6 +2,10 @@
 This Concourse CI resource will check for updated versions of a package in an APT repository.
 
 ## Usage
+The source is configured as follows:
+- repositories: list of repositories in sources.list format, e.g. "deb http://archive.ubuntu.com/ubuntu xenial main"
+- package: name of the package to query for new versions
+
 The resource will provide at least the following two files:
 - $resource_dir/package: contains the name of the package
 - $resource_dir/version: contains the version of the package
