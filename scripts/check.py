@@ -29,13 +29,15 @@ with contextlib.redirect_stdout(sys.stderr):
     pkg_versions = [pkg.version for pkg in pkgs]
     pkg_versions.sort(key=lambda el: packaging.version.parse(el))
 
-    if not version or len(pkg_versions) == 0:
-        new_versions = pkg_versions
-    elif version not in pkg_versions:
-        new_versions = pkg_versions[-1]
+    if version not in pkg_versions:
+        # Either:
+        #   This is a fresh check (ie no 'current' version), so we return the latest version
+        #   This version is no longer available from apt, so we return the latest version
+        new_versions = pkg_versions[-1:]
     else:
+        # Otherwise, we return everything newer than the current version, including the current version
         index = pkg_versions.index(version)
-        new_versions = pkg_versions[index:-1]
+        new_versions = pkg_versions[index:]
 
     os.write(
         stdout_fd,
