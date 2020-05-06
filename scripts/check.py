@@ -20,7 +20,7 @@ with contextlib.redirect_stdout(sys.stderr):
         print('required parameter "' + e.args[0] + '" missing')
         exit(1)
 
-    version = config['version']['id'] if config['version'] is not None else None
+    version = config['version']['id'] if 'version' in config and config['version'] is not None else None
 
     sources = apt_repo.APTSources(
         [apt_repo.APTRepository.from_sources_list_entry(repo) for repo in repos]
